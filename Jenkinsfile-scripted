@@ -2,7 +2,7 @@ node('') {
     environment {
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "18.206.151.37:8081/"
+        NEXUS_URL = "http://18.206.151.37:8081/"
         NEXUS_REPOSITORY = "simple-customer-app"
         NEXUS_CREDENTIAL_ID = "nexus-id"
     }
