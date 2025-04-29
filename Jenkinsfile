@@ -36,40 +36,48 @@ pipeline {
                     // Use values from your pom.xml
                     def artifactName = "${pom.artifactId}-${pom.version}.${pom.packaging}"
                     def artifactPath = "target/${artifactName}"
+                    def sourcesArtifactPath = "target/${pom.artifactId}-${pom.version}-sources.jar"
 
                     if (fileExists(artifactPath)) {
                         echo "Found artifact: ${artifactPath}"
+                        def artifactsToUpload = [
+                            [
+                                artifactId: pom.artifactId,
+                                classifier: '',
+                                file: artifactPath,
+                                type: pom.packaging
+                            ],
+                            [
+                                artifactId: pom.artifactId,
+                                classifier: '',
+                                file: 'pom.xml',
+                                type: 'pom'
+                            ]
+                        ]
+
+                        // Conditionally add the sources artifact if it exists
+                        if (fileExists(sourcesArtifactPath)) {
+                            artifactsToUpload.add([
+                                artifactId: pom.artifactId,
+                                classifier: 'sources',
+                                file: sourcesArtifactPath,
+                                type: 'jar'
+                            ])
+                        } else {
+                            echo "Sources JAR not found at: ${sourcesArtifactPath}. Skipping upload."
+                        }
+
                         nexusArtifactUploader(
                             nexusVersion: NEXUS_VERSION,
                             protocol: NEXUS_PROTOCOL,
                             nexusUrl: NEXUS_URL,
                             groupId: pom.groupId, // From pom.xml: com.ncodeit
-                            version: "${BUILD_NUMBER}",
+                            version: "${pom.version}", // Use pom.version here
                             repository: NEXUS_REPOSITORY,
                             credentialsId: NEXUS_CREDENTIAL_ID,
-                            artifacts: [
-                                [
-                                    artifactId: pom.artifactId, // From pom.xml: ncodeit-hello-world
-                                    classifier: '',
-                                    file: artifactPath,
-                                    type: pom.packaging // From pom.xml: war
-                                ],
-                                [
-                                    artifactId: pom.artifactId, // From pom.xml: ncodeit-hello-world
-                                    classifier: 'sources',
-                                    file: "target/${pom.artifactId}-${pom.version}-sources.jar",
-                                    type: 'jar',
-                                    optional: true // Sources might not always be present
-                                ],
-                                [
-                                    artifactId: pom.artifactId, // From pom.xml: ncodeit-hello-world
-                                    classifier: '',
-                                    file: 'pom.xml',
-                                    type: 'pom'
-                                ]
-                            ]
+                            artifacts: artifactsToUpload
                         )
-                        echo "Successfully published ${artifactName} to Nexus: ${NEXUS_URL}${NEXUS_REPOSITORY}/${pom.groupId.replace('.', '/')}/${pom.artifactId}/${BUILD_NUMBER}/${artifactName}"
+                        echo "Successfully published ${artifactName} to Nexus: ${NEXUS_URL}${NEXUS_REPOSITORY}/${pom.groupId.replace('.', '/')}/${pom.artifactId}/${pom.version}/${artifactName}"
                     } else {
                         error "Artifact not found at: ${artifactPath}"
                     }
