@@ -1,0 +1,76 @@
+node {
+    agent any
+
+    environment {
+        NEXUS_VERSION = "nexus3"
+        NEXUS_PROTOCOL = "http"
+        NEXUS_URL = "18.206.151.37:8081/"
+        NEXUS_REPOSITORY = "simple-customer-app"
+        NEXUS_CREDENTIAL_ID = "nexus-id"
+    }
+
+    stage('Checkout Code') {
+        echo 'Checking out source code...'
+        git 'https://github.com/dakkani/spring3-mvc-maven-xml-hello-world-1.git'
+    }
+
+    stage('Build and Package') {
+        echo 'Building and packaging the application...'
+        sh 'mvn -Dmaven.test.failure.ignore=true clean package'
+    }
+
+    stage('Publish to Nexus') {
+        script {
+            echo 'Publishing artifact to Nexus...'
+            def pom = readMavenPom file: 'pom.xml'
+            // Use values from your pom.xml
+            def artifactName = "${pom.artifactId}-${pom.version}.${pom.packaging}"
+            def artifactPath = "target/${artifactName}"
+            def sourcesArtifactPath = "target/${pom.artifactId}-${pom.version}-sources.jar"
+
+            if (fileExists(artifactPath)) {
+                echo "Found artifact: ${artifactPath}"
+                def artifactsToUpload = [
+                    [
+                        artifactId: pom.artifactId,
+                        classifier: '',
+                        file: artifactPath,
+                        type: pom.packaging
+                    ],
+                    [
+                        artifactId: pom.artifactId,
+                        classifier: '',
+                        file: 'pom.xml',
+                        type: 'pom'
+                    ]
+                ]
+
+                // Conditionally add the sources artifact if it exists
+                if (fileExists(sourcesArtifactPath)) {
+                    artifactsToUpload.add([
+                        artifactId: pom.artifactId,
+                        classifier: 'sources',
+                        file: sourcesArtifactPath,
+                        type: 'jar'
+                    ])
+                } else {
+                    echo "Sources JAR not found at: ${sourcesArtifactPath}. Skipping upload."
+                }
+
+                nexusArtifactUploader(
+                    nexusVersion: NEXUS_VERSION,
+                    protocol: NEXUS_PROTOCOL,
+                    nexusUrl: NEXUS_URL,
+                    groupId: pom.groupId, // From pom.xml: com.ncodeit
+                    version: "${pom.version}", // Use pom.version here
+                    repository: NEXUS_REPOSITORY,
+                    credentialsId: NEXUS_CREDENTIAL_ID,
+                    artifacts: artifactsToUpload
+                )
+                echo "Successfully published ${artifactName} to Nexus: ${NEXUS_URL}${NEXUS_REPOSITORY}/${pom.groupId.replace('.', '/')}/${pom.artifactId}/${pom.version}/${artifactName}"
+            } else {
+                error "Artifact not found at: ${artifactPath}"
+            }
+        }
+    }
+}
