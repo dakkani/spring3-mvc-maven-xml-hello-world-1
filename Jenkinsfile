@@ -34,7 +34,7 @@ pipeline {
                     echo 'Publishing artifact to Nexus...'
                     def pom = readMavenPom file: 'pom.xml'
                     // Use values from your pom.xml
-                    def artifactName = "${pom.artifactId}-${BUILD_NUMBER}.${pom.packaging}"
+                    def artifactName = "${pom.artifactId}-${pom.version}.${pom.packaging}"
                     def artifactPath = "target/${artifactName}"
 
                     if (fileExists(artifactPath)) {
@@ -57,7 +57,7 @@ pipeline {
                                 [
                                     artifactId: pom.artifactId, // From pom.xml: ncodeit-hello-world
                                     classifier: 'sources',
-                                    file: "target/${pom.artifactId}-${BUILD_NUMBER}-sources.jar",
+                                    file: "target/${pom.artifactId}-${pom.version}-sources.jar",
                                     type: 'jar',
                                     optional: true // Sources might not always be present
                                 ],
