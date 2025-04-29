@@ -56,16 +56,16 @@ node('') {
                 }
 
                 nexusArtifactUploader(
-                    nexusVersion: NEXUS_VERSION,
-                    protocol: NEXUS_PROTOCOL,
-                    nexusUrl: NEXUS_URL,
-                    groupId: pom.groupId, // From pom.xml: com.ncodeit
-                    version: "${pom.version}", // Use pom.version here
-                    repository: NEXUS_REPOSITORY,
-                    credentialsId: NEXUS_CREDENTIAL_ID,
+                    nexusVersion: env.NEXUS_VERSION,  // Access environment variable with env.
+                    protocol: env.NEXUS_PROTOCOL,     // Access environment variable with env.
+                    nexusUrl: env.NEXUS_URL,          // Access environment variable with env.
+                    groupId: pom.groupId,
+                    version: "${pom.version}",
+                    repository: env.NEXUS_REPOSITORY, // Access environment variable with env.
+                    credentialsId: env.NEXUS_CREDENTIAL_ID, // Access environment variable with env.
                     artifacts: artifactsToUpload
                 )
-                echo "Successfully published ${artifactName} to Nexus: ${NEXUS_URL}${NEXUS_REPOSITORY}/${pom.groupId.replace('.', '/')}/${pom.artifactId}/${pom.version}/${artifactName}"
+                echo "Successfully published ${artifactName} to Nexus: ${env.NEXUS_URL}${env.NEXUS_REPOSITORY}/${pom.groupId.replace('.', '/')}/${pom.artifactId}/${pom.version}/${artifactName}"
             } else {
                 error "Artifact not found at: ${artifactPath}"
             }
