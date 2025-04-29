@@ -23,7 +23,6 @@ pipeline {
             steps {
                 script {
                     echo 'Building and packaging the application...'
-                    // Assuming 'mvn' is in your Jenkins agent's PATH
                     sh 'mvn -Dmaven.test.failure.ignore=true clean package'
                 }
             }
@@ -34,6 +33,7 @@ pipeline {
                 script {
                     echo 'Publishing artifact to Nexus...'
                     def pom = readMavenPom file: 'pom.xml'
+                    // Use values from your pom.xml
                     def artifactName = "${pom.artifactId}-${BUILD_NUMBER}.${pom.packaging}"
                     def artifactPath = "target/${artifactName}"
 
@@ -43,19 +43,26 @@ pipeline {
                             nexusVersion: NEXUS_VERSION,
                             protocol: NEXUS_PROTOCOL,
                             nexusUrl: NEXUS_URL,
-                            groupId: pom.groupId,
+                            groupId: pom.groupId, // From pom.xml: com.ncodeit
                             version: "${BUILD_NUMBER}",
                             repository: NEXUS_REPOSITORY,
                             credentialsId: NEXUS_CREDENTIAL_ID,
                             artifacts: [
                                 [
-                                    artifactId: pom.artifactId,
+                                    artifactId: pom.artifactId, // From pom.xml: ncodeit-hello-world
                                     classifier: '',
                                     file: artifactPath,
-                                    type: pom.packaging
+                                    type: pom.packaging // From pom.xml: war
                                 ],
                                 [
-                                    artifactId: pom.artifactId,
+                                    artifactId: pom.artifactId, // From pom.xml: ncodeit-hello-world
+                                    classifier: 'sources',
+                                    file: "target/${pom.artifactId}-${BUILD_NUMBER}-sources.jar",
+                                    type: 'jar',
+                                    optional: true // Sources might not always be present
+                                ],
+                                [
+                                    artifactId: pom.artifactId, // From pom.xml: ncodeit-hello-world
                                     classifier: '',
                                     file: 'pom.xml',
                                     type: 'pom'
