@@ -11,10 +11,6 @@ pipeline {
         booleanParam(defaultValue: false, description: 'Publish artifacts to Nexus', name: 'publish_to_nexus')
     }
     
-    tools {
-        maven "Maven"
-    }
-    
     environment {
         NEXUS_VERSION = "nexus3"
         NEXUS_PROTOCOL = "http"
