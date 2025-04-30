@@ -2,7 +2,7 @@ pipeline {
     agent any
  
     parameters {
-        gitParameter branchFilter: 'origin/(.*)', defaultValue: 'origin/master', name: 'BRANCH', type: 'PT_BRANCH'
+        gitParameter branchFilter: 'origin/(.*)', defaultValue: 'origin', name: 'BRANCH', type: 'PT_BRANCH'
         string(name: 'GIT_URL', defaultValue: 'https://github.com/dakkani/spring3-mvc-maven-xml-hello-world-1.git', description: 'Git repository URL')
         string(name: 'NEXUS_URL', defaultValue: '13.233.66.167:8081/', description: 'Nexus server URL with port')
         string(name: 'NEXUS_REPOSITORY', defaultValue: 'ncodeit-helloworld', description: 'Nexus repository name')
